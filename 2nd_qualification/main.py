@@ -111,6 +111,7 @@ try:
             if QR_hover_detect and not start_hover:
                 print('2단계 : 현재 ', end='')
                 log_str += '2단계 : 현재 '
+                yaw_velocity = default_drone_yaw
                 # Green 탐색 단계
                 if not detect_G:
                     print('Green 탐색 중')
@@ -121,6 +122,7 @@ try:
                         for contour in contours:
                             if cv2.contourArea(contour) < 2250:
                                 forward_backward_velocity = default_drone_forward_backward
+                                yaw_velocity = 0
                             elif cv2.contourArea(contour) >= 2250:
                                 detect_G = True
                                 print('지정된 사이즈의 Green 감지')
@@ -140,6 +142,7 @@ try:
                         for contour in contours:
                             if cv2.contourArea(contour) < 2250:
                                 forward_backward_velocity = default_drone_forward_backward
+                                yaw_velocity = 0
                             elif cv2.contourArea(contour) >= 2250:
                                 detect_R = True
                                 print('지정된 사이즈의 Red 감지')
@@ -159,6 +162,7 @@ try:
                         for contour in contours:
                             if cv2.contourArea(contour) < 2250:
                                 forward_backward_velocity = default_drone_forward_backward
+                                yaw_velocity = 0
                             elif cv2.contourArea(contour) >= 2250:
                                 detect_B = True
                                 print('지정된 사이즈의 Blue 감지')

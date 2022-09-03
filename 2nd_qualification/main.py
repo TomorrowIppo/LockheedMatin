@@ -17,7 +17,7 @@ detect_B = False
 QR_B = False
 
 dir = '/Users/kbj/PycharmProjects/opencv_study/LockheadMartin/2nd_qualification/DJITello_Log/'
-f = open(dir + "dji_tello_main_log.txt", 'w')
+f = open("dji_tello_main_log.txt", 'w')
 log_str = ''
 
 default_drone_up_down = 10
@@ -120,17 +120,18 @@ try:
 
                     if len(contours) != 0:
                         for contour in contours:
-                            if cv2.contourArea(contour) < 2250:
-                                forward_backward_velocity = default_drone_forward_backward
-                                yaw_velocity = 0
-                            elif cv2.contourArea(contour) >= 2250:
-                                detect_G = True
-                                print('지정된 사이즈의 Green 감지')
-                                log_str += '지정된 사이즈의 Green 감지\n'
-
                             if cv2.contourArea(contour) > 500:
                                 x, y, w, h = cv2.boundingRect(contour)
                                 cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 3)
+                            if cv2.contourArea(contour) < 4000:
+                                forward_backward_velocity = default_drone_forward_backward
+                                yaw_velocity = 0
+                            elif cv2.contourArea(contour) >= 4000:
+                                detect_G = True
+                                print('지정된 사이즈의 Green 감지')
+                                log_str += '지정된 사이즈의 Green 감지\n'
+                                red_detect_img = cv2.imwrite('green_detect_img.png', frame)
+                                forward_backward_velocity = (-3) * default_drone_forward_backward
 
                 # Green 탐색 후 Red 탐색 단계
                 if detect_G and not detect_R:
@@ -140,17 +141,18 @@ try:
 
                     if len(contours) != 0:
                         for contour in contours:
-                            if cv2.contourArea(contour) < 2250:
-                                forward_backward_velocity = default_drone_forward_backward
-                                yaw_velocity = 0
-                            elif cv2.contourArea(contour) >= 2250:
-                                detect_R = True
-                                print('지정된 사이즈의 Red 감지')
-                                log_str += '지정된 사이즈의 Red 감지\n'
-
                             if cv2.contourArea(contour) > 500:
                                 x, y, w, h = cv2.boundingRect(contour)
                                 cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 3)
+                            if cv2.contourArea(contour) < 4000:
+                                forward_backward_velocity = default_drone_forward_backward
+                                yaw_velocity = 0
+                            elif cv2.contourArea(contour) >= 4000:
+                                detect_R = True
+                                print('지정된 사이즈의 Red 감지')
+                                log_str += '지정된 사이즈의 Red 감지\n'
+                                red_detect_img = cv2.imwrite('red_detect_img.png', frame)
+                                forward_backward_velocity = (-3) * default_drone_forward_backward
 
                 # Green, Red 탐색 후 Blue 탐색 단계
                 if detect_G and detect_R and not detect_B:
@@ -160,17 +162,18 @@ try:
 
                     if len(contours) != 0:
                         for contour in contours:
-                            if cv2.contourArea(contour) < 2250:
-                                forward_backward_velocity = default_drone_forward_backward
-                                yaw_velocity = 0
-                            elif cv2.contourArea(contour) >= 2250:
-                                detect_B = True
-                                print('지정된 사이즈의 Blue 감지')
-                                log_str += '지정된 사이즈의 Blue 감지\n'
-
                             if cv2.contourArea(contour) > 500:
                                 x, y, w, h = cv2.boundingRect(contour)
                                 cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 3)
+                            if cv2.contourArea(contour) < 4000:
+                                forward_backward_velocity = default_drone_forward_backward
+                                yaw_velocity = 0
+                            elif cv2.contourArea(contour) >= 4000:
+                                detect_B = True
+                                print('지정된 사이즈의 Blue 감지')
+                                log_str += '지정된 사이즈의 Blue 감지\n'
+                                red_detect_img = cv2.imwrite('blue_detect_img.png', frame)
+                                forward_backward_velocity = (-3) * default_drone_forward_backward
 
                 # G, B, R 모두 감지 시 강제 종료
                 if detect_G and detect_R and detect_B:

@@ -69,27 +69,29 @@ frameHeight = height
 
 
 global imgContour
-global dir;
+global dir
+
+
 def empty(a):
     pass
 
 cv2.namedWindow("HSV")
-cv2.resizeWindow("HSV",640,240)
-cv2.createTrackbar("HUE Min","HSV",20,179,empty)
-cv2.createTrackbar("HUE Max","HSV",40,179,empty)
-cv2.createTrackbar("SAT Min","HSV",148,255,empty)
-cv2.createTrackbar("SAT Max","HSV",255,255,empty)
-cv2.createTrackbar("VALUE Min","HSV",89,255,empty)
-cv2.createTrackbar("VALUE Max","HSV",255,255,empty)
+cv2.resizeWindow("HSV", 640, 240)
+cv2.createTrackbar("HUE Min", "HSV", 20, 179, empty)
+cv2.createTrackbar("HUE Max", "HSV", 40, 179, empty)
+cv2.createTrackbar("SAT Min", "HSV", 148, 255, empty)
+cv2.createTrackbar("SAT Max", "HSV", 255, 255, empty)
+cv2.createTrackbar("VALUE Min", "HSV", 89, 255, empty)
+cv2.createTrackbar("VALUE Max", "HSV", 255, 255, empty)
 
 cv2.namedWindow("Parameters")
-cv2.resizeWindow("Parameters",640,240)
-cv2.createTrackbar("Threshold1","Parameters",166,255,empty)
-cv2.createTrackbar("Threshold2","Parameters",171,255,empty)
-cv2.createTrackbar("Area","Parameters",1750,30000,empty)
+cv2.resizeWindow("Parameters", 640, 240)
+cv2.createTrackbar("Threshold1", "Parameters", 166, 255, empty)
+cv2.createTrackbar("Threshold2", "Parameters", 171, 255, empty)
+cv2.createTrackbar("Area", "Parameters", 1750, 30000, empty)
 
 
-def stackImages(scale,imgArray):
+def stackImages(scale, imgArray):
     rows = len(imgArray)
     cols = len(imgArray[0])
     rowsAvailable = isinstance(imgArray[0], list)

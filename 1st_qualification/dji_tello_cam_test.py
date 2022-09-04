@@ -20,6 +20,21 @@ global qr_detect
 qr_detect = False
 
 
+def calc_func(qr_str):
+    my_str = list(qr_str)
+
+    if my_str[1] == '+':
+        return int(my_str[0]) + int(my_str[2])
+    elif my_str[1] == '-':
+        return int(my_str[0]) - int(my_str[2])
+    elif my_str[1] == '*':
+        return int(my_str[0]) * int(my_str[2])
+    elif my_str[1] == 'x':
+        return int(my_str[0]) * int(my_str[2])
+    elif my_str[1] == '/':
+        return int(my_str[0]) / int(my_str[2])
+
+
 def cv():
     global red_detect, green_detect, blue_detect, qr_detect
     frame = me.get_frame_read().frame
@@ -36,6 +51,7 @@ def cv():
         if not qr_detect:
             qr_detect = True
         print("Decoded Data : {}".format(data))
+        print(f'result : {calc_func(data)}')
         #rectifiedImage = np.uint8(rectifiedImage)
     # qr 끝
 

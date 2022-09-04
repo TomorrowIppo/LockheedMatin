@@ -53,6 +53,22 @@ drone.streamon()  # start camera streaming
 file = '/LockheadMartin/1st_qualification/DJI_Tello_Log/'
 f = open("dji_tello_main_log.txt", 'w')
 
+
+def calc_func(qr_str):
+    my_str = list(qr_str)
+
+    if qr_str[1] == '+':
+        return my_str[0] + my_str[2]
+    elif qr_str[1] == '-':
+        return my_str[0] - my_str[2]
+    elif qr_str[1] == '*':
+        return my_str[0] * my_str[2]
+    elif qr_str[1] == 'x':
+        return my_str[0] * my_str[2]
+    elif qr_str[1] == '/':
+        return my_str[0] / my_str[2]
+
+
 try:
     while True:
         up_down_velocity = 0
@@ -90,6 +106,8 @@ try:
                 if len(data) > 0:
                     print("Decoded Data : {}".format(data))
                     log_str += ('"Decoded Data : {}".format(data)\n')
+                    print(f'result : {calc_func(data)}')
+                    log_str += f'result : {calc_func(data)}\n'
                     rectifiedImage = np.uint8(rectifiedImage)
                     log_str += ('time: ' + str(time.time() - start_time))
                     f.write(log_str)

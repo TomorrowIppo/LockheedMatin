@@ -55,16 +55,16 @@ init_hover_time = True
 def calc_func(qr_str):
     my_str = list(qr_str)
 
-    if qr_str[1] == '+':
-        return my_str[0] + my_str[2]
-    elif qr_str[1] == '-':
-        return my_str[0] - my_str[2]
-    elif qr_str[1] == '*':
-        return my_str[0] * my_str[2]
-    elif qr_str[1] == 'x':
-        return my_str[0] * my_str[2]
-    elif qr_str[1] == '/':
-        return my_str[0] / my_str[2]
+    if my_str[1] == '+':
+        return int(my_str[0]) + int(my_str[2])
+    elif my_str[1] == '-':
+        return int(my_str[0]) - int(my_str[2])
+    elif my_str[1] == '*':
+        return int(my_str[0]) * int(my_str[2])
+    elif my_str[1] == 'x':
+        return int(my_str[0]) * int(my_str[2])
+    elif my_str[1] == '/':
+        return int(my_str[0]) / int(my_str[2])
 
 try:
     while True:
@@ -150,7 +150,8 @@ try:
                                 print('지정된 사이즈의 Green 감지')
                                 log_str += '지정된 사이즈의 Green 감지\n'
                                 red_detect_img = cv2.imwrite('green_detect_img.png', frame)
-                                forward_backward_velocity = (-3) * default_drone_forward_backward
+                                forward_backward_velocity = -slow_drone_forward_backward
+                                up_down_velocity = -default_drone_up_down
 
                 # Green에 접근했지만, QR을 못 읽었을 때
                 if detect_G and not QR_G:
@@ -184,7 +185,8 @@ try:
                                 print('지정된 사이즈의 Red 감지')
                                 log_str += '지정된 사이즈의 Red 감지\n'
                                 red_detect_img = cv2.imwrite('red_detect_img.png', frame)
-                                forward_backward_velocity = (-3) * default_drone_forward_backward
+                                forward_backward_velocity = -slow_drone_forward_backward
+                                up_down_velocity = -default_drone_up_down
 
                 # Red에 접근했지만, QR을 못 읽었을 때
                 if detect_G and detect_R and not QR_R:
@@ -217,7 +219,8 @@ try:
                                 print('지정된 사이즈의 Blue 감지')
                                 log_str += '지정된 사이즈의 Blue 감지\n'
                                 red_detect_img = cv2.imwrite('blue_detect_img.png', frame)
-                                forward_backward_velocity = (-3) * default_drone_forward_backward
+                                forward_backward_velocity = -slow_drone_forward_backward
+                                up_down_velocity = -default_drone_up_down
 
                 # Blue에 접근했지만, QR을 못 읽었을 때
                 if detect_G and detect_R and detect_B and not QR_B:

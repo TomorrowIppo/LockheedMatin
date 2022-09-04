@@ -1,5 +1,6 @@
 from djitellopy import Tello
 import cv2
+import time
 import numpy as np
 
 
@@ -7,6 +8,37 @@ import numpy as np
 width = 640  # WIDTH OF THE IMAGE
 height = 480  # HEIGHT OF THE IMAGE
 deadZone = 100
+######################################################################
+
+######################################################################
+start_time = time.time()
+hover_time = 0
+init_hover_time = True
+
+default_drone_up_down = 10
+slow_drone_up_down = 5
+default_drone_right_left = 10
+slow_drone_right_left = 5
+default_drone_forward_backward = 10
+slow_drone_forward_backward = 5
+default_drone_yaw = 30
+slow_drone_yaw = 5
+
+QR_hover_detect = False
+start_hover = False
+init_height = True
+
+detect_G = False
+QR_G = False
+
+detect_R = False
+QR_R = False
+
+detect_B = False
+QR_B = False
+
+f = open("dji_tello_main_log.txt", 'w')
+log_str = ''
 ######################################################################
 
 startCounter = 0
@@ -22,6 +54,7 @@ me.speed = 0
 
 
 print(me.get_battery())
+log_str += ('drone_battery : ' + str(me.get_battery()) + '%\n')
 
 me.streamoff()
 me.streamon()
@@ -87,7 +120,8 @@ def stackImages(scale,imgArray):
         ver = hor
     return ver
 
-def getContours(img,imgContour):
+
+def getContours(img, imgContour):
     global dir
     contours, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     for cnt in contours:
@@ -118,14 +152,17 @@ def getContours(img,imgContour):
                 cv2.putText(imgContour, " GO DOWN ", (20, 50), cv2.FONT_HERSHEY_COMPLEX, 1,(0, 0, 255), 3)
                 cv2.rectangle(imgContour,(int(frameWidth/2-deadZone),int(frameHeight/2)+deadZone),(int(frameWidth/2+deadZone),frameHeight),(0,0,255),cv2.FILLED)
                 dir = 4
-            else: dir=0
+            else:
+                dir = 0
 
             cv2.line(imgContour, (int(frameWidth/2),int(frameHeight/2)), (cx,cy),(0, 0, 255), 3)
             cv2.rectangle(imgContour, (x, y), (x + w, y + h), (0, 255, 0), 5)
-            cv2.putText(imgContour, "Points: " + str(len(approx)), (x + w + 20, y + 20), cv2.FONT_HERSHEY_COMPLEX, .7,(0, 255, 0), 2)
-            cv2.putText(imgContour, "Area: " + str(int(area)), (x + w + 20, y + 45), cv2.FONT_HERSHEY_COMPLEX, 0.7,(0, 255, 0), 2)
-            cv2.putText(imgContour, " " + str(int(x)) + " " + str(int(y)), (x - 20, y - 45), cv2.FONT_HERSHEY_COMPLEX,0.7,(0, 255, 0), 2)
-        else: dir=0
+            cv2.putText(imgContour, "Points: " + str(len(approx)), (x + w + 20, y + 20), cv2.FONT_HERSHEY_COMPLEX, .7, (0, 255, 0), 2)
+            cv2.putText(imgContour, "Area: " + str(int(area)), (x + w + 20, y + 45), cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 255, 0), 2)
+            cv2.putText(imgContour, " " + str(int(x)) + " " + str(int(y)), (x - 20, y - 45), cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 255, 0), 2)
+        else:
+            dir = 0
+
 
 def display(img):
     cv2.line(img,(int(frameWidth/2)-deadZone,0),(int(frameWidth/2)-deadZone,frameHeight),(255,255,0),3)
@@ -133,6 +170,11 @@ def display(img):
     cv2.circle(img,(int(frameWidth/2),int(frameHeight/2)),5,(0,0,255),5)
     cv2.line(img, (0,int(frameHeight / 2) - deadZone), (frameWidth,int(frameHeight / 2) - deadZone), (255, 255, 0), 3)
     cv2.line(img, (0, int(frameHeight / 2) + deadZone), (frameWidth, int(frameHeight / 2) + deadZone), (255, 255, 0), 3)
+
+
+def QR(img):
+    pass
+
 
 while True:
 

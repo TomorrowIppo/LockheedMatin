@@ -60,7 +60,7 @@ drone.streamon()  # start camera streaming
 
 # 데이터 로그
 file = '/LockheadMartin/1st_qualification/DJI_Tello_Log/'
-f = open(file + "dji_tello_main_log.txt", 'w')
+f = open("dji_tello_main_log.txt", 'w')
 
 try:
     while True:
@@ -105,12 +105,12 @@ try:
         else:
             if hover_MODE:
                 if hover_Check_mode:
-                    print('3초간 호버링 진행중.')
+                    print('5초간 호버링 진행중.')
                     start_hover = time.time()
                     hover_Check_mode = False
                 interval = (time.time() - start_hover)
-                if 2.9 <= interval and interval <= 3.1:
-                    print('3초간 호버링 끝')
+                if 5.0 <= interval and interval <= 5.1:
+                    print('5초간 호버링 끝')
                     hover_MODE = False
             else:
                 print('QR 진입')

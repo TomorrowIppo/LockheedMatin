@@ -51,7 +51,7 @@ drone.streamon()  # start camera streaming
 
 # 데이터 로그
 file = '/LockheadMartin/1st_qualification/DJI_Tello_Log/'
-f = open(file + "dji_tello_main_log.txt", 'w')
+f = open("dji_tello_main_log.txt", 'w')
 
 try:
     while True:

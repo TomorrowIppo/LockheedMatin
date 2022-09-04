@@ -21,9 +21,13 @@ f = open("dji_tello_main_log.txt", 'w')
 log_str = ''
 
 default_drone_up_down = 10
+slow_drone_up_down = 5
 default_drone_right_left = 10
+slow_drone_right_left = 5
 default_drone_forward_backward = 10
+slow_drone_forward_backward = 5
 default_drone_yaw = 30
+slow_drone_yaw = 5
 
 lower_blue = np.array([100, 150, 0])
 upper_blue = np.array([140, 255, 255])
@@ -46,6 +50,21 @@ drone.takeoff()
 start_time = time.time()
 hover_time = 0
 init_hover_time = True
+
+
+def calc_func(qr_str):
+    my_str = list(qr_str)
+
+    if qr_str[1] == '+':
+        return my_str[0] + my_str[2]
+    elif qr_str[1] == '-':
+        return my_str[0] - my_str[2]
+    elif qr_str[1] == '*':
+        return my_str[0] * my_str[2]
+    elif qr_str[1] == 'x':
+        return my_str[0] * my_str[2]
+    elif qr_str[1] == '/':
+        return my_str[0] / my_str[2]
 
 try:
     while True:
@@ -133,8 +152,21 @@ try:
                                 red_detect_img = cv2.imwrite('green_detect_img.png', frame)
                                 forward_backward_velocity = (-3) * default_drone_forward_backward
 
+                # Green에 접근했지만, QR을 못 읽었을 때
+                if detect_G and not QR_G:
+                    # QR을 찾는 중
+                    data, bbox, rectifiedImage = qrDecoder.detectAndDecode(frame)
+                    if len(data) > 0:
+                        print("Decoded Data : {}".format(data))
+                        log_str += f'Decoded Data : {data}\n'
+                        print(f'result : {calc_func(data)}')
+                        log_str += f'result : {calc_func(data)}\n'
+                        rectifiedImage = np.uint8(rectifiedImage)
+                        QR_G = True
+
+
                 # Green 탐색 후 Red 탐색 단계
-                if detect_G and not detect_R:
+                if detect_G and not detect_R and QR_G:
                     print('Red 탐색 중')
                     log_str += 'Red 탐색 중\n'
                     contours, hierarchy = cv2.findContours(mask_R, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -154,8 +186,20 @@ try:
                                 red_detect_img = cv2.imwrite('red_detect_img.png', frame)
                                 forward_backward_velocity = (-3) * default_drone_forward_backward
 
+                # Red에 접근했지만, QR을 못 읽었을 때
+                if detect_G and detect_R and not QR_R:
+                    # QR을 찾는 중
+                    data, bbox, rectifiedImage = qrDecoder.detectAndDecode(frame)
+                    if len(data) > 0:
+                        print("Decoded Data : {}".format(data))
+                        log_str += f'Decoded Data : {data}\n'
+                        print(f'result : {calc_func(data)}')
+                        log_str += f'result : {calc_func(data)}\n'
+                        rectifiedImage = np.uint8(rectifiedImage)
+                        QR_G = True
+
                 # Green, Red 탐색 후 Blue 탐색 단계
-                if detect_G and detect_R and not detect_B:
+                if detect_G and detect_R and not detect_B and QR_G and QR_B:
                     print('Blue 탐색 중')
                     log_str += 'Blue 탐색 중\n'
                     contours, hierarchy = cv2.findContours(mask_B, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -175,8 +219,20 @@ try:
                                 red_detect_img = cv2.imwrite('blue_detect_img.png', frame)
                                 forward_backward_velocity = (-3) * default_drone_forward_backward
 
-                # G, B, R 모두 감지 시 강제 종료
-                if detect_G and detect_R and detect_B:
+                # Blue에 접근했지만, QR을 못 읽었을 때
+                if detect_G and detect_R and detect_B and not QR_B:
+                    # QR을 찾는 중
+                    data, bbox, rectifiedImage = qrDecoder.detectAndDecode(frame)
+                    if len(data) > 0:
+                        print("Decoded Data : {}".format(data))
+                        log_str += f'Decoded Data : {data}\n'
+                        print(f'result : {calc_func(data)}')
+                        log_str += f'result : {calc_func(data)}\n'
+                        rectifiedImage = np.uint8(rectifiedImage)
+                        QR_G = True
+
+                # G, B, R의 QR을 모두 감지 시 강제 종료
+                if QR_G and QR_R and QR_B:
                     raise KeyboardInterrupt
 
         drone.send_rc_control(left_right_velocity, forward_backward_velocity, up_down_velocity, yaw_velocity)

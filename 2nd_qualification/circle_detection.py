@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-videoCapture = cv2.videoCapture(0)
+videoCapture = cv2.VideoCapture(0)
 prevCircle = None
 dist = lambda x1, y1, x2, y2: (x1 - x2)**2 + (y1 - y2)**2
 

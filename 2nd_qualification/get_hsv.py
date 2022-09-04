@@ -12,11 +12,12 @@ def pick_color(event,x,y,flags,param):
     if event == cv2.EVENT_LBUTTONDOWN:
         pixel = image_hsv[y,x]
 
-        upper =  np.array([pixel[0] + 10, pixel[1] + 10, pixel[2] + 40])
-        lower =  np.array([pixel[0] - 10, pixel[1] - 10, pixel[2] - 40])
+        upper = np.array([pixel[0] + 10, pixel[1] + 10, pixel[2] + 40])
+        lower = np.array([pixel[0] - 10, pixel[1] - 10, pixel[2] - 40])
         print(pixel, lower, upper)
 
         image_mask = cv2.inRange(image_hsv,lower,upper)
+        cv2.imshow('mask', image_mask)
 
 
 def stackImages(scale, imgArray):
@@ -64,8 +65,8 @@ while True:
 
     image_hsv = cv2.cvtColor(image_src, cv2.COLOR_BGR2HSV)
 
-    stack = stackImages(0.9, ([image_hsv, image_src, image_mask]))
-    cv2.imshow('제발 성공하자', stack)
+    stack = stackImages(0.9, ([image_hsv, image_src]))
+    cv2.imshow('hsv', stack)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break

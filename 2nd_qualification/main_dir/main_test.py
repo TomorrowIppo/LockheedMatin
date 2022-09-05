@@ -108,6 +108,11 @@ class Order(Enum):
     GO_FORWARD = auto()
     GO_BACKWARD = auto()
 
+    GO_POS1 = auto()
+    GO_POS2 = auto()
+    GO_POS3 = auto()
+    GO_POS4 = auto()
+
 
 def empty(a):
     pass
@@ -167,12 +172,13 @@ def getContours(img, imgContour, detect_color):
     global detect_G
     global detect_R
     global detect_B
+    global log_str
     contours, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     if len(contours) != 0 and searching_mode:
         for cnt in contours:
             area = cv2.contourArea(cnt)
-            areaMin = cv2.getTrackbarPos("Area", "Parameters")
-            if area > areaMin:
+            # areaMin = cv2.getTrackbarPos("Area", "Parameters")
+            if area > 500:
                 cv2.drawContours(imgContour, cnt, -1, (255, 0, 255), 7)
                 peri = cv2.arcLength(cnt, True)
                 approx = cv2.approxPolyDP(cnt, 0.02 * peri, True)
@@ -181,19 +187,31 @@ def getContours(img, imgContour, detect_color):
                 cx = int(x + (w / 2))  # CENTER X OF THE OBJECT
                 cy = int(y + (h / 2))  # CENTER Y OF THE OBJECT
 
-                if cx < (int(frameWidth/2)-deadZone):
+                if cx > (int(frameWidth/2) + deadZone) and cy < (int(frameHeight/2) - deadZone):
+                    cv2.putText(imgContour, ' GO POS1 ', (20, 50), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 3)
+                    dir = Order.GO_POS1
+                elif cx < (int(frameWidth/2)-deadZone) and cy < (int(frameHeight/2) - deadZone):
+                    cv2.putText(imgContour, ' GO POS2 ', (20, 50), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 3)
+                    dir = Order.GO_POS2
+                elif cx < (int(frameWidth/2)-deadZone) and cy > (int(frameHeight/2) + deadZone):
+                    cv2.putText(imgContour, ' GO POS3 ', (20, 50), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 3)
+                    dir = Order.GO_POS3
+                elif cx > (int(frameWidth/2) + deadZone) and cy > (int(frameHeight/2) + deadZone):
+                    cv2.putText(imgContour, ' GO POS4 ', (20, 50), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 3)
+                    dir = Order.GO_POS4
+                elif cx < (int(frameWidth/2)-deadZone):
                     cv2.putText(imgContour, ' TURN LEFT ', (20, 50), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 3)
                     #cv2.rectangle(imgContour, (0, int(frameHeight/2-deadZone)), (int(frameWidth/2)-deadZone, int(frameHeight/2)+deadZone), (0, 0, 255), cv2.FILLED)
                     dir = Order.TURN_LEFT
-                elif cx > (int(frameWidth / 2) + deadZone):
+                elif cx > (int(frameWidth/2) + deadZone):
                     cv2.putText(imgContour, ' TURN RIGHT ', (20, 50), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 3)
                     #cv2.rectangle(imgContour, (int(frameWidth/2+deadZone), int(frameHeight/2-deadZone)), (frameWidth, int(frameHeight/2)+deadZone), (0, 0, 255), cv2.FILLED)
                     dir = Order.TURN_RIGHT
-                elif cy < (int(frameHeight / 2) - deadZone):
+                elif cy < (int(frameHeight/2) - deadZone):
                     cv2.putText(imgContour, ' GO UP ', (20, 50), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 3)
                     #cv2.rectangle(imgContour, (int(frameWidth/2-deadZone), 0), (int(frameWidth/2+deadZone), int(frameHeight/2)-deadZone), (0, 0, 255), cv2.FILLED)
                     dir = Order.GO_UP
-                elif cy > (int(frameHeight / 2) + deadZone):
+                elif cy > (int(frameHeight/2) + deadZone):
                     cv2.putText(imgContour, ' GO DOWN ', (20, 50), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 3)
                     #cv2.rectangle(imgContour, (int(frameWidth/2-deadZone), int(frameHeight/2)+deadZone), (int(frameWidth/2+deadZone), frameHeight), (0, 0, 255), cv2.FILLED)
                     dir = Order.GO_DOWN
@@ -239,6 +257,8 @@ def getContours(img, imgContour, detect_color):
                 dir = Order.default_mode
     elif searching_mode:
         dir = Order.TURN_LEFT
+    elif not searching_mode:
+        pass
     else:
         dir = Order.default_mode
 
@@ -365,8 +385,9 @@ try:
 
         # 0단계, 고도 초기화 단계
         if init_height:
-            print(drone_height)
-            if drone_height == 70:
+            print(f'------ 고도 초기화 중 ({drone_height}) ------')
+            log_str += f'------ 고도 초기화 중 ({drone_height}) ------\n'
+            if drone_height == 60:
                 init_height = False
                 print('------ 고도 초기화 종료 ------')
                 log_str += '------ 고도 초기화 종료 ------\n'
@@ -420,9 +441,13 @@ try:
 
                 # Green에 접근했지만, QR을 못 읽었을 때
                 if detect_G and not QR_G:
+                    searching_mode = False
+                    dir = Order.GO_DOWN
                     # QR을 찾는 중
                     if QR(img):
                         QR_G = True
+                        searching_mode = True
+                        dir = Order.default_mode
 
                 # Green 탐색 후 Red 탐색 단계
                 if detect_G and not detect_R and QR_G:
@@ -434,9 +459,13 @@ try:
 
                 # Red에 접근했지만, QR을 못 읽었을 때
                 if detect_G and detect_R and not QR_R:
+                    searching_mode = False
+                    dir = Order.GO_DOWN
                     # QR을 찾는 중
                     if QR(img):
                         QR_R = True
+                        searching_mode = True
+                        dir = Order.default_mode
 
                 # Green, Red 탐색 후 Blue 탐색 단계
                 if detect_G and detect_R and not detect_B and QR_G and QR_R:
@@ -448,9 +477,13 @@ try:
 
                 # Blue에 접근했지만, QR을 못 읽었을 때
                 if detect_G and detect_R and detect_B and not QR_B:
+                    searching_mode = False
+                    dir = Order.GO_DOWN
                     # QR을 찾는 중
                     if QR(img):
                         QR_B = True
+                        searching_mode = True
+                        dir = Order.default_mode
 
                 # G, B, R의 QR을 모두 감지 시 강제 종료
                 if QR_G and QR_R and QR_B:
@@ -482,7 +515,7 @@ try:
         elif dir == Order.GO_RIGHT:
             drone.left_right_velocity = 60
         # TURN_RIGHT
-        elif dir == Order.TURN_LEFT:
+        elif dir == Order.TURN_RIGHT:
             drone.yaw_velocity = 60
         # GO_UP
         elif dir == Order.GO_UP:
@@ -496,6 +529,23 @@ try:
         # GO_BACKWARD
         elif dir == Order.GO_BACKWARD:
             drone.for_back_velocity = -10
+        # GO_POS1
+        elif dir == Order.GO_POS1:
+            drone.up_down_velocity = 30
+            drone.yaw_velocity = 30
+        # GO_POS2
+        elif dir == Order.GO_POS2:
+            drone.up_down_velocity = 30
+            drone.yaw_velocity = -30
+        # GO_POS3
+        elif dir == Order.GO_POS3:
+            drone.up_down_velocity = -30
+            drone.yaw_velocity = -30
+        # GO_POS4
+        elif dir == Order.GO_POS4:
+            drone.up_down_velocity = -30
+            drone.yaw_velocity = 30
+
         # default
         elif dir == Order.default_mode:
             drone.left_right_velocity = 0

@@ -484,7 +484,7 @@ try:
             log = 'drone.left_right_velocity = 60'
             print(log)
         # TURN_RIGHT
-        elif dir == Order.TURN_LEFT:
+        elif dir == Order.TURN_RIGHT:
             log = 'drone.yaw_velocity = 60'
             print(log)
         # GO_UP

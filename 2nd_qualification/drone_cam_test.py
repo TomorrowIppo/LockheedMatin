@@ -46,14 +46,14 @@ QR_B = False
 global searching_mode
 searching_mode = False
 
-lower_blue = np.array([101, 50, 38])
-upper_blue = np.array([110, 255, 255])
+lower_blue = np.array([100, 150, 0])
+upper_blue = np.array([140, 255, 255])
 
-lower_green = np.array([36, 25, 25])
-upper_green = np.array([70, 225, 255])
+lower_green = np.array([50, 150, 50])
+upper_green = np.array([80, 255, 255])
 
-lower_red = np.array([155,25,0])
-upper_red = np.array([179,255,255])
+lower_red = np.array([0, 50, 50])
+upper_red = np.array([10, 255, 255])
 
 f = open("dji_tello_test_log.txt", 'w')
 global log_str
@@ -63,20 +63,20 @@ log_str = ''
 startCounter = True
 
 # CONNECT TO TELLO
-# drone = Tello()
-# drone.connect()
-# drone.for_back_velocity = 0
-# drone.left_right_velocity = 0
-# drone.up_down_velocity = 0
-# drone.yaw_velocity = 0
-# drone.speed = 0
+drone = Tello()
+drone.connect()
+drone.for_back_velocity = 0
+drone.left_right_velocity = 0
+drone.up_down_velocity = 0
+drone.yaw_velocity = 0
+drone.speed = 0
 
 
-# print(drone.get_battery())
-# log_str += ('drone_battery : ' + str(drone.get_battery()) + '%\n')
-#
-# drone.streamoff()
-# drone.streamon()
+print(drone.get_battery())
+log_str += ('drone_battery : ' + str(drone.get_battery()) + '%\n')
+
+drone.streamoff()
+drone.streamon()
 ########################
 
 frameWidth = width
@@ -337,12 +337,14 @@ def do_action(num):
 
 
 try:
-    cap = cv2.VideoCapture(0)
+    #cap = cv2.VideoCapture(0)
     init_height = False
     while True:
         # GET THE IMAGE FROM TELLO
         # frame_read = drone.get_frame_read()
-        ret, myFrame = cap.read()
+        #ret, myFrame = cap.read()
+        frame_read = drone.get_frame_read()
+        myFrame = frame_read.frame
         img = cv2.resize(myFrame, (width, height))
         imgContour = img.copy()
         imgHsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -411,8 +413,8 @@ try:
                 if not detect_G:
                     print('Green 탐색 중')
                     log_str += 'Green 탐색 중\n'
-                    lower = lower_green
-                    upper = upper_green
+                    # lower = lower_green
+                    # upper = upper_green
                     detect_color = 'G'
 
                 # Green에 접근했지만, QR을 못 읽었을 때
@@ -425,8 +427,8 @@ try:
                 if detect_G and not detect_R and QR_G:
                     print('Red 탐색 중')
                     log_str += 'Red 탐색 중\n'
-                    lower = lower_red
-                    upper = upper_red
+                    # lower = lower_red
+                    # upper = upper_red
                     detect_color = 'R'
 
                 # Red에 접근했지만, QR을 못 읽었을 때
@@ -439,8 +441,8 @@ try:
                 if detect_G and detect_R and not detect_B and QR_G and QR_R:
                     print('Blue 탐색 중')
                     log_str += 'Blue 탐색 중\n'
-                    lower = lower_blue
-                    upper = upper_blue
+                    # lower = lower_blue
+                    # upper = upper_blue
                     detect_color = 'B'
 
                 # Blue에 접근했지만, QR을 못 읽었을 때

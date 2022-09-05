@@ -55,7 +55,7 @@ upper_green = np.array([80, 255, 255])
 lower_red = np.array([0, 50, 50])
 upper_red = np.array([10, 255, 255])
 
-f = open("dji_tello_test_log.txt", 'w')
+f = open("dji_tello_main_test_log.txt", 'w')
 global log_str
 log_str = ''
 ######################################################################
@@ -63,25 +63,25 @@ log_str = ''
 startCounter = True
 
 # CONNECT TO TELLO
-# drone = Tello()
-# drone.connect()
-# drone.for_back_velocity = 0
-# drone.left_right_velocity = 0
-# drone.up_down_velocity = 0
-# drone.yaw_velocity = 0
-# drone.speed = 0
+drone = Tello()
+drone.connect()
+drone.for_back_velocity = 0
+drone.left_right_velocity = 0
+drone.up_down_velocity = 0
+drone.yaw_velocity = 0
+drone.speed = 0
 
 
-# print(drone.get_battery())
-# log_str += ('drone_battery : ' + str(drone.get_battery()) + '%\n')
-#
-# drone.streamoff()
-# drone.streamon()
+print(drone.get_battery())
+log_str += ('drone_battery : ' + str(drone.get_battery()) + '%\n')
+
+drone.streamoff()
+drone.streamon()
 ########################
 
 frameWidth = width
 frameHeight = height
-center_block_area = (frameWidth / 3) * (frameHeight / 3)
+center_block_area = int((frameWidth / 3) * (frameHeight / 3))
 # cap = cv2.VideoCapture(1)
 # cap.set(3, frameWidth)
 # cap.set(4, frameHeight)
@@ -167,7 +167,6 @@ def getContours(img, imgContour, detect_color):
     global detect_G
     global detect_R
     global detect_B
-    global log_str
     contours, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     if len(contours) != 0 and searching_mode:
         for cnt in contours:
@@ -199,7 +198,7 @@ def getContours(img, imgContour, detect_color):
                     #cv2.rectangle(imgContour, (int(frameWidth/2-deadZone), int(frameHeight/2)+deadZone), (int(frameWidth/2+deadZone), frameHeight), (0, 0, 255), cv2.FILLED)
                     dir = Order.GO_DOWN
                 else:
-                    if ((center_block_area - 1000) <= area) and (area <= (center_block_area + 1000)):
+                    if ((center_block_area - 2000) <= int(area)) and (int(area) <= (center_block_area + 2000)):
                         dir = Order.default_mode
                         if detect_color == 'G':
                             print('G 중심 영역 도달')
@@ -220,11 +219,11 @@ def getContours(img, imgContour, detect_color):
                             log_str += f'Area : {area}\n'
                             detect_B = True
 
-                    elif area > center_block_area + 2000:
+                    elif int(area) > center_block_area + 2000:
                         dir = Order.GO_BACKWARD
                         print('기준치보다 큼')
                         log_str += '기준치보다 큼\n'
-                    elif area < center_block_area - 2000:
+                    elif int(area) < center_block_area - 2000:
                         dir = Order.GO_FORWARD
                         print('기준치보다 작음')
                         log_str += '기준치보다 작음\n'
@@ -337,16 +336,15 @@ def do_action(num):
 
 
 try:
-    cap = cv2.VideoCapture(0)
-    init_height = False
     while True:
         # GET THE IMAGE FROM TELLO
-        # frame_read = drone.get_frame_read()
-        ret, myFrame = cap.read()
+        frame_read = drone.get_frame_read()
+        myFrame = frame_read.frame
         img = cv2.resize(myFrame, (width, height))
         imgContour = img.copy()
         imgHsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-        # drone_height = drone.get_height()
+        drone_height = drone.get_height()
+        dir = Order.default_mode
 
         h_min = cv2.getTrackbarPos("HUE Min","HSV")
         h_max = cv2.getTrackbarPos("HUE Max", "HSV")
@@ -361,23 +359,22 @@ try:
         detect_color = None
 
         # takeoff
-        # if startCounter:
-        #     drone.takeoff()
-        #     startCounter = False
+        if startCounter:
+            drone.takeoff()
+            startCounter = False
 
         # 0단계, 고도 초기화 단계
         if init_height:
-            pass
-            # print(drone_height)
-            # if drone_height == 70:
-            #     init_height = False
-            #     print('------ 고도 초기화 종료 ------')
-            #     log_str += '------ 고도 초기화 종료 ------\n'
-            #
-            # elif drone_height < 70:
-            #     dir = Order.GO_UP
-            # else:
-            #     dir = Order.GO_DOWN
+            print(drone_height)
+            if drone_height == 70:
+                init_height = False
+                print('------ 고도 초기화 종료 ------')
+                log_str += '------ 고도 초기화 종료 ------\n'
+
+            elif drone_height < 70:
+                dir = Order.GO_UP
+            else:
+                dir = Order.GO_DOWN
         else:
             # 1단계, 'hover' QR 탐색
             if not QR_hover_detect:
@@ -386,7 +383,13 @@ try:
                 qrDecoder = cv2.QRCodeDetector()
 
                 # hover QR을 찾는 중
-                QR(img)
+                data, bbox, rectifiedImage = qrDecoder.detectAndDecode(img)
+                if len(data) > 0 and data == 'hover':
+                    print("Decoded Data : {}".format(data))
+                    log_str += f'Decoded Data : {data}\n'
+                    rectifiedImage = np.uint8(rectifiedImage)
+                    start_hover = True
+                    QR_hover_detect = True
 
             # 1.5단계, 'hover' QR 탐지 시 호버링
             if start_hover:
@@ -411,8 +414,8 @@ try:
                 if not detect_G:
                     print('Green 탐색 중')
                     log_str += 'Green 탐색 중\n'
-                    # lower = lower_green
-                    # upper = upper_green
+                    lower = lower_green
+                    upper = upper_green
                     detect_color = 'G'
 
                 # Green에 접근했지만, QR을 못 읽었을 때
@@ -425,8 +428,8 @@ try:
                 if detect_G and not detect_R and QR_G:
                     print('Red 탐색 중')
                     log_str += 'Red 탐색 중\n'
-                    # lower = lower_red
-                    # upper = upper_red
+                    lower = lower_red
+                    upper = upper_red
                     detect_color = 'R'
 
                 # Red에 접근했지만, QR을 못 읽었을 때
@@ -439,8 +442,8 @@ try:
                 if detect_G and detect_R and not detect_B and QR_G and QR_R:
                     print('Blue 탐색 중')
                     log_str += 'Blue 탐색 중\n'
-                    # lower = lower_blue
-                    # upper = upper_blue
+                    lower = lower_blue
+                    upper = upper_blue
                     detect_color = 'B'
 
                 # Blue에 접근했지만, QR을 못 읽었을 때
@@ -471,47 +474,38 @@ try:
 
         # GO_LEFT
         if dir == Order.GO_LEFT:
-            log = 'drone.left_right_velocity = -60'
-            print(log)
+            drone.left_right_velocity = -60
         # TURN_LEFT
         elif dir == Order.TURN_LEFT:
-            log = 'drone.yaw_velocity = -60'
-            print(log)
+            drone.yaw_velocity = -60
         # GO_RIGHT
         elif dir == Order.GO_RIGHT:
-            log = 'drone.left_right_velocity = 60'
-            print(log)
+            drone.left_right_velocity = 60
         # TURN_RIGHT
         elif dir == Order.TURN_LEFT:
-            log = 'drone.yaw_velocity = 60'
-            print(log)
+            drone.yaw_velocity = 60
         # GO_UP
         elif dir == Order.GO_UP:
-            log = 'drone.up_down_velocity = 60'
-            print(log)
+            drone.up_down_velocity = 20
         # GO_DOWN
         elif dir == Order.GO_DOWN:
-            log = 'drone.up_down_velocity = -60'
-            print(log)
+            drone.up_down_velocity = -20
         # GO_FORWARD
         elif dir == Order.GO_FORWARD:
-            log = 'drone.for_back_velocity = 60'
-            print(log)
+            drone.for_back_velocity = 10
         # GO_BACKWARD
         elif dir == Order.GO_BACKWARD:
-            log = 'drone.for_back_velocity = -60'
-            print(log)
+            drone.for_back_velocity = -10
         # default
         elif dir == Order.default_mode:
-            # drone.left_right_velocity = 0
-            # drone.for_back_velocity = 0
-            # drone.up_down_velocity = 0
-            # drone.yaw_velocity = 0
-            print('default')
+            drone.left_right_velocity = 0
+            drone.for_back_velocity = 0
+            drone.up_down_velocity = 0
+            drone.yaw_velocity = 0
 
        # SEND VELOCITY VALUES TO TELLO
-       #  if drone.send_rc_control:
-       #      drone.send_rc_control(drone.left_right_velocity, drone.for_back_velocity, drone.up_down_velocity, drone.yaw_velocity)
+        if drone.send_rc_control:
+            drone.send_rc_control(drone.left_right_velocity, drone.for_back_velocity, drone.up_down_velocity, drone.yaw_velocity)
         print(dir)
 
         stack = stackImages(0.9, ([img, result], [imgDil, imgContour]))
@@ -527,5 +521,5 @@ except KeyboardInterrupt:
     log_str += ('time: ' + str(time.time() - start_time) + '\n')
     f.write(log_str)
     f.close()
-    # drone.land()
+    drone.land()
     cv2.destroyAllWindows()

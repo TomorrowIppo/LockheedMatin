@@ -46,14 +46,14 @@ QR_B = False
 global searching_mode
 searching_mode = False
 
-lower_blue = np.array([100, 150, 0])
-upper_blue = np.array([140, 255, 255])
+lower_blue = np.array([101, 50, 38])
+upper_blue = np.array([110, 255, 255])
 
-lower_green = np.array([50, 150, 50])
-upper_green = np.array([80, 255, 255])
+lower_green = np.array([36, 25, 25])
+upper_green = np.array([70, 225, 255])
 
-lower_red = np.array([0, 50, 50])
-upper_red = np.array([10, 255, 255])
+lower_red = np.array([155,25,0])
+upper_red = np.array([179,255,255])
 
 f = open("dji_tello_test_log.txt", 'w')
 global log_str
@@ -411,8 +411,8 @@ try:
                 if not detect_G:
                     print('Green 탐색 중')
                     log_str += 'Green 탐색 중\n'
-                    # lower = lower_green
-                    # upper = upper_green
+                    lower = lower_green
+                    upper = upper_green
                     detect_color = 'G'
 
                 # Green에 접근했지만, QR을 못 읽었을 때
@@ -425,8 +425,8 @@ try:
                 if detect_G and not detect_R and QR_G:
                     print('Red 탐색 중')
                     log_str += 'Red 탐색 중\n'
-                    # lower = lower_red
-                    # upper = upper_red
+                    lower = lower_red
+                    upper = upper_red
                     detect_color = 'R'
 
                 # Red에 접근했지만, QR을 못 읽었을 때
@@ -439,8 +439,8 @@ try:
                 if detect_G and detect_R and not detect_B and QR_G and QR_R:
                     print('Blue 탐색 중')
                     log_str += 'Blue 탐색 중\n'
-                    # lower = lower_blue
-                    # upper = upper_blue
+                    lower = lower_blue
+                    upper = upper_blue
                     detect_color = 'B'
 
                 # Blue에 접근했지만, QR을 못 읽었을 때

@@ -42,6 +42,48 @@ class Order(Enum):
     GO_POS4 = auto()
 
 
+def process(img_input):
+    gray = cv2.cvtColor(img_input, cv2.COLOR_BGR2GRAY)
+
+    gray = cv2.resize(gray, (28, 28), interpolation=cv2.INTER_AREA)
+
+    (thresh, img_binary) = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)
+
+    h,w = img_binary.shape
+
+    ratio = 100 / h
+    new_h = 100
+    new_w = w * ratio
+
+    img_empty = np.zeros((110, 110), dtype=img_binary.dtype)
+    img_binary = cv2.resize(img_binary, (int(new_w), int(new_h)), interpolation=cv2.INTER_AREA)
+    img_empty[:img_binary.shape[0], :img_binary.shape[1]] = img_binary
+
+    img_binary = img_empty
+
+    cnts = cv2.findContours(img_binary.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+
+    # 컨투어의 무게중심 좌표를 구합니다.
+    M = cv2.moments(cnts[0][0])
+    center_x = (M["m10"] / M['m00'])
+    center_y = (M['m01'] / M['m00'])
+
+    # 무게 중심이 이미지 중심으로 오도록 이동시킵니다.
+    height, width = img_binary.shape[:2]
+    shiftx = width/2 - center_x
+    shifty = height/2 - center_y
+
+    Translation_Matrix = np.float32([[1, 0, shiftx], [0, 1, shifty]])
+    img_binary = cv2.warpAffine(img_binary, Translation_Matrix, (width, height))
+
+
+    img_binary = cv2.resize(img_binary, (28, 28), interpolation=cv2.INTER_AREA)
+    flatten = img_binary.flatten() / 255.0
+
+    return flatten
+
+
 def stackImages(scale, imgArray):
     rows = len(imgArray)
     cols = len(imgArray[0])
@@ -295,3 +337,75 @@ def do_action(drone, num):
     else:
         pass
 
+
+def handwritten_do_daction(drone, digit):
+    global log_str
+    global dir
+    global init_height
+
+    if digit == 1:
+        print(f'digit = {digit}')
+        log_str += f'digit = {digit}\n'
+        drone.move_back(30)
+        drone.move_forward(30)
+        init_height = True
+
+    elif digit == 2:
+        print(f'digit = {digit}')
+        log_str += f'digit = {digit}\n'
+        # 안전거리 확보
+        drone.move_left(30)
+        drone.move_right(30)
+        init_height = True
+
+    elif digit == 3:
+        print(f'digit = {digit}')
+        log_str += f'digit = {digit}\n'
+        drone.rotate_clockwise(360)
+        init_height = True
+
+    elif digit == 4:
+        print(f'digit = {digit}')
+        log_str += f'digit = {digit}\n'
+        # 안전거리 확보
+        drone.move_right(10)
+        drone.move_up(10)
+        drone.move_left(10)
+        drone.move_down(10)
+        init_height = True
+
+    elif digit == 5:
+        print(f'num = {digit}')
+        log_str += f'num = {digit}\n'
+        drone.flip_backward()
+        init_height = True
+
+    elif digit == 6:
+        print(f'num = {digit}')
+        log_str += f'num = {digit}\n'
+        drone.move_up(30)
+        drone.flip_backward()
+        drone.move_down(30)
+        init_height = True
+
+    elif digit == 7:
+        print(f'num = {digit}')
+        log_str += f'num = {digit}\n'
+        drone.flip_left()
+        init_height = True
+
+    elif digit == 8:
+        print(f'num = {digit}')
+        log_str += f'num = {digit}\n'
+        drone.move_up(30)
+        drone.move_down(30)
+        init_height = True
+
+    elif digit == 9:
+        print(f'num = {digit}')
+        log_str += f'num = {digit}\n'
+        drone.flip_backward()
+        init_height = True
+
+    else:
+        pass

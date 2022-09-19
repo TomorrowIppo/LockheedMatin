@@ -75,14 +75,16 @@ upper_green = np.array([360, 255, 50])
 lower_red = np.array([0, 50, 50])
 upper_red = np.array([10, 255, 255])
 
-model = tf.keras.models.Sequential([
-    tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(512, activation=tf.nn.relu),
-    tf.keras.layers.Dropout(0.2),
-    tf.keras.layers.Dense(10, activation=tf.nn.softmax)
-])
+# model = tf.keras.models.Sequential([
+#     tf.keras.layers.Flatten(),
+#     tf.keras.layers.Dense(512, activation=tf.nn.relu),
+#     tf.keras.layers.Dropout(0.2),
+#     tf.keras.layers.Dense(10, activation=tf.nn.softmax)
+# ])
+#
+# model.load_weights('mnist_checkpoint')
 
-model.load_weights('mnist_checkpoint')
+model = tf.keras.models.load_model('digits.h5')
 
 f = open("dji_tello_main_test_log.txt", 'w')
 global log_str
@@ -439,6 +441,20 @@ def handwritten_do_daction(_drone, digit):
         pass
 
 
+def prediction(image, model):
+    img = cv2.resize(image, (28, 28))
+    img = img / 255
+    img = img.reshape(1, 28, 28, 1)
+    predict = model.predict(img)
+    prob = np.amax(predict)
+    class_index = model.predict_classes(img)
+    result = class_index[0]
+    if prob < 0.85:
+        result = 0
+        prob = 0
+    return result, prob
+
+
 def empty(a):
     pass
 
@@ -462,9 +478,13 @@ color = None
 detect_color = None
 cap = None
 drone = None
+WIDTH = None
+HEIGHT = None
 my_cam = Cam.WEBCAM
 if my_cam == Cam.WEBCAM:
     cap = cv2.VideoCapture(0)
+    WIDTH = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+    HEIGHT = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 elif my_cam == Cam.DRONE:
     # --------------------------------------------------------------------
 
@@ -489,6 +509,7 @@ elif my_cam == Cam.DRONE:
 
 recog_w = 250
 recog_h = 150
+
 
 try:
     while True:
@@ -802,13 +823,30 @@ try:
                 raise KeyboardInterrupt
         elif my_cam == Cam.WEBCAM:
             ret, frame = cap.read()
+            frame_copy = frame.copy()
+
+            bbox_size = (60, 60)
+            bbox = [(int(WIDTH // 2 - bbox_size[0] // 2), int(HEIGHT // 2 - bbox_size[1] // 2)),
+                    (int(WIDTH // 2 + bbox_size[0] // 2), int(HEIGHT // 2 + bbox_size[1] // 2))]
+
+            img_cropped = frame[bbox[0][1]:bbox[1][1], bbox[0][0]:bbox[1][0]]
+            img_gray = cv2.cvtColor(img_cropped, cv2.COLOR_BGR2GRAY)
+            img_gray = cv2.resize(img_gray, (200, 200))
+
+            digit_result, probability = prediction(img_gray, model)
+            digit_img = cv2.putText(frame_copy, f'Prediction: {digit_result}', (40, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8,
+                        (255, 0, 255), 2, cv2.LINE_AA)
+            digit_img = cv2.putText(frame_copy, "Probability: " + "{:.2f}".format(probability * 100), (40, 80), cv2.FONT_HERSHEY_SIMPLEX,
+                        0.8,
+                        (255, 0, 255), 2, cv2.LINE_AA)
+
+            digit_img = cv2.rectangle(frame_copy, bbox[0], bbox[1], (0, 255, 0), 3)
+
+            if probability != 0:
+                print(f'Prediction : {digit_result}, Probability : {"{:.2f}".format(probability * 100)}')
 
             img = cv2.resize(frame, (width, height))
-            copy_img = img.copy()
-            imgContour = copy_img.copy()
-            recognition_area = cv2.rectangle(copy_img, (recog_w, recog_h), (width - recog_w, height - recog_h), (0, 0, 255), 3)
-            img_roi = copy_img[recog_h:height - recog_h, recog_w:width - recog_w]
-            flatten = process(img_roi)
+            imgContour = img.copy()
             imgHsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
             h_min = cv2.getTrackbarPos("HUE Min", "HSV")
@@ -836,13 +874,7 @@ try:
 
             print(f'dir : {dir}')
 
-            stack = stackImages(0.9, ([recognition_area, result], [imgDil, imgContour]))
-
-            predictions = model.predict(flatten[np.newaxis, :])
-            probabilityValue = np.amax(predictions)
-            if probabilityValue > threshold:
-                with tf.compat.v1.Session() as sess:
-                    print(f'Recognized Digit : {tf.argmax(predictions, 1).eval()}')
+            stack = stackImages(0.9, ([digit_img, result], [imgDil, imgContour]))
 
             cv2.imshow('Main', stack)
 
